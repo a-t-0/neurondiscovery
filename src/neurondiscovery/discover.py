@@ -20,8 +20,8 @@ from src.neurondiscovery.create_snns import create_neurons, create_snns
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.print_behaviour import (
     drawProgressBar,
-    print_found_neuron_behaviour,
-    print_neuron_properties,
+    get_neuron_properties,
+    manage_printing,
 )
 from src.neurondiscovery.requirements.checker import (
     verify_input_spike,
@@ -29,7 +29,7 @@ from src.neurondiscovery.requirements.checker import (
 )
 
 
-def manage_simulation(
+def get_satisfactory_neurons(
     *,
     a_in_time: int,
     disco: Discovery,
@@ -38,13 +38,12 @@ def manage_simulation(
     min_neuron_props: Dict[str, Union[float, int]],
     print_behaviour: Optional[bool] = None,
     min_nr_of_neurons: Optional[int] = None,
-) -> None:
+) -> List[Dict[str, Union[float, int]]]:
     """Performs a run."""
 
     # Initialise properties.
     node_name: str = "0"
     input_node_name: str = "input_spike"
-    working_snns: List[nx.DiGraph] = []
 
     # Create neurons.
     neurons: List[LIF_neuron] = create_neurons(disco=disco)
@@ -59,6 +58,52 @@ def manage_simulation(
         node_name=node_name,
     )
     print(f"Created {len(snns)} snns.")
+
+    working_snns: List[nx.DiGraph] = manage_simulation(
+        a_in_time=a_in_time,
+        expected_spikes=expected_spikes,
+        input_node_name=input_node_name,
+        node_name=node_name,
+        max_neuron_props=max_neuron_props,
+        min_neuron_props=min_neuron_props,
+        snns=snns,
+        min_nr_of_neurons=min_nr_of_neurons,
+    )
+
+    # Get neuron properties
+    neuron_properties: List[
+        Dict[str, Union[float, int]]
+    ] = get_neuron_properties(
+        a_in_time=a_in_time,
+        input_node_name=input_node_name,
+        node_name=node_name,
+        snns=working_snns,
+    )
+
+    manage_printing(
+        expected_spikes=expected_spikes,
+        neuron_properties=neuron_properties,
+        node_name=node_name,
+        working_snns=working_snns,
+        print_behaviour=print_behaviour,
+    )
+    return neuron_properties
+
+
+# pylint: disable = R0913
+def manage_simulation(
+    a_in_time: int,
+    expected_spikes: List[bool],
+    input_node_name: str,
+    node_name: str,
+    max_neuron_props: Dict[str, Union[float, int]],
+    min_neuron_props: Dict[str, Union[float, int]],
+    snns: List[nx.DiGraph],
+    min_nr_of_neurons: Optional[int] = None,
+) -> List[nx.DiGraph]:
+    """Performs the neuron simulations for the snns."""
+
+    working_snns: List[nx.DiGraph] = []
 
     # Simulate snns.
     for count, snn in enumerate(snns):
@@ -82,30 +127,7 @@ def manage_simulation(
             and len(working_snns) > min_nr_of_neurons
         ):
             break
-
-    # Print found neuron results.
-    print("")
-    if len(working_snns) > 0:
-        print("Found the following neurons that satisfy the requirements:")
-    else:
-        print(
-            "Did not find neurons that satisfy the requirements."
-            + f"{expected_spikes}"
-        )
-
-        print("")
-    if print_behaviour:
-        print_found_neuron_behaviour(
-            node_name=node_name,
-            snns=working_snns,
-            t_max=min(len(expected_spikes), 50),
-        )
-    print_neuron_properties(
-        a_in_time=a_in_time,
-        input_node_name=input_node_name,
-        node_name=node_name,
-        snns=working_snns,
-    )
+    return working_snns
 
 
 # pylint: disable=R0913

@@ -3,11 +3,44 @@ settings."""
 # pylint: disable=R0903
 # pylint: disable=R0801
 
+
 import sys
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import networkx as nx
 from typeguard import typechecked
+
+
+@typechecked
+def manage_printing(
+    *,
+    expected_spikes: List[bool],
+    neuron_properties: List[Dict[str, Union[float, int]]],
+    node_name: str,
+    working_snns: List[nx.DiGraph],
+    print_behaviour: Optional[bool] = None,
+) -> None:
+    """Prints relevant simulation data if desired.."""
+    # Print found neuron results.
+    print("")
+    if len(working_snns) > 0:
+        print("Found the following neurons that satisfy the requirements:")
+    else:
+        print(
+            "Did not find neurons that satisfy the requirements."
+            + f"{expected_spikes}"
+        )
+
+        print("")
+    if print_behaviour:
+        print_found_neuron_behaviour(
+            node_name=node_name,
+            snns=working_snns,
+            t_max=min(len(expected_spikes), 50),
+        )
+
+    for neuron_property in neuron_properties:
+        print(neuron_property)
 
 
 # pylint: disable=R0913
@@ -23,14 +56,15 @@ def print_found_neuron_behaviour(
 
 
 @typechecked
-def print_neuron_properties(
+def get_neuron_properties(
     *,
     a_in_time: int,
     input_node_name: str,
     node_name: str,
     snns: List[nx.DiGraph],
-) -> None:
+) -> List[Dict[str, Union[float, int]]]:
     """Prints: spikes, u, v for the first max_t timesteps."""
+    neuron_properties: List[Dict[str, Union[float, int]]] = []
     for snn in snns:
         neuron = snn.nodes[node_name]["nx_lif"][0]
         recurrent_weight = get_synapse_weight(
@@ -39,11 +73,18 @@ def print_neuron_properties(
         a_in = get_synapse_weight(
             snn=snn, left=input_node_name, right=node_name
         )
-        print(
-            f"du={neuron.du.get()}, dv={neuron.dv.get()}, vth="
-            + f"{neuron.vth.get()}, bias={neuron.bias.get()}, weight="
-            + f"{recurrent_weight}, a_in={a_in}, a_in_time={a_in_time}"
+        neuron_properties.append(
+            {
+                "a_in": a_in,
+                "a_in_time": a_in_time,
+                "bias": neuron.bias.get(),
+                "du": neuron.du.get(),
+                "dv": neuron.dv.get(),
+                "vth": neuron.vth.get(),
+                "weight": recurrent_weight,
+            }
         )
+    return neuron_properties
 
 
 @typechecked
