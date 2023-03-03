@@ -46,7 +46,10 @@ def within_neuron_property_bounds(
     max_neuron_props: Dict[str, Union[float, int]],
     min_neuron_props: Dict[str, Union[float, int]],
 ) -> bool:
-    """If the voltage exceeds 100, return False.."""
+    """Checks whether the neuron properties are within the specified bounds.
+
+    E.g. if the voltage exceeds 100, return False, else return True.
+    """
     for attr, min_val in min_neuron_props.items():
         if getattr(lif_neuron, attr).get() < min_val:
             return False
