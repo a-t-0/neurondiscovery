@@ -15,7 +15,7 @@ from typeguard import typechecked
 def manage_printing(
     *,
     expected_spikes: List[bool],
-    neuron_properties: List[Dict[str, Union[float, int]]],
+    neuron_dicts: List[Dict[str, Union[float, int]]],
     node_name: str,
     working_snns: List[nx.DiGraph],
     print_behaviour: Optional[bool] = None,
@@ -39,7 +39,7 @@ def manage_printing(
             t_max=min(len(expected_spikes), 50),
         )
 
-    for neuron_property in neuron_properties:
+    for neuron_property in neuron_dicts:
         print(neuron_property)
 
 
@@ -56,7 +56,7 @@ def print_found_neuron_behaviour(
 
 
 @typechecked
-def get_neuron_properties(
+def get_neuron_dicts(
     *,
     a_in_time: int,
     input_node_name: str,
@@ -64,7 +64,7 @@ def get_neuron_properties(
     snns: List[nx.DiGraph],
 ) -> List[Dict[str, Union[float, int]]]:
     """Prints: spikes, u, v for the first max_t timesteps."""
-    neuron_properties: List[Dict[str, Union[float, int]]] = []
+    neuron_dicts: List[Dict[str, Union[float, int]]] = []
     for snn in snns:
         neuron = snn.nodes[node_name]["nx_lif"][0]
         recurrent_weight = get_synapse_weight(
@@ -73,7 +73,7 @@ def get_neuron_properties(
         a_in = get_synapse_weight(
             snn=snn, left=input_node_name, right=node_name
         )
-        neuron_properties.append(
+        neuron_dicts.append(
             {
                 "a_in": a_in,
                 "a_in_time": a_in_time,
@@ -84,7 +84,7 @@ def get_neuron_properties(
                 "weight": recurrent_weight,
             }
         )
-    return neuron_properties
+    return neuron_dicts
 
 
 @typechecked

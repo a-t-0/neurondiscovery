@@ -8,12 +8,12 @@ from typeguard import typechecked
 
 @typechecked
 def write_dict_to_file(
-    filepath: str, neuron_properties: List[Dict[str, Union[float, int]]]
+    filepath: str, neuron_dicts: List[Dict[str, Union[float, int]]]
 ) -> None:
     """Writes dict to json file."""
     # Serialize data into file:
     with open(filepath, "w", encoding="utf-8") as some_file:
-        json.dump(neuron_properties, some_file)
+        json.dump(neuron_dicts, some_file)
 
     # Assert file exists.
     if not os.path.isfile(filepath):
@@ -27,7 +27,7 @@ def write_dict_to_file(
     )
 
     # Assert loaded data equals input data.
-    if loaded_data != neuron_properties:
+    if loaded_data != neuron_dicts:
         raise LookupError("Error, loaded data does not equal outputted data.")
 
 
@@ -43,5 +43,5 @@ def load_dict_from_file(filepath: str) -> List[Dict[str, Union[float, int]]]:
 
     # Read data from file:
     with open(filepath, encoding="utf-8") as some_file:
-        neuron_properties = json.load(some_file)
-    return neuron_properties
+        neuron_dicts = json.load(some_file)
+    return neuron_dicts

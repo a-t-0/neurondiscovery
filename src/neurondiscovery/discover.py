@@ -20,7 +20,7 @@ from src.neurondiscovery.create_snns import create_neurons, create_snns
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.print_behaviour import (
     drawProgressBar,
-    get_neuron_properties,
+    get_neuron_dicts,
     manage_printing,
 )
 from src.neurondiscovery.requirements.checker import (
@@ -71,9 +71,7 @@ def get_satisfactory_neurons(
     )
 
     # Get neuron properties
-    neuron_properties: List[
-        Dict[str, Union[float, int]]
-    ] = get_neuron_properties(
+    neuron_dicts: List[Dict[str, Union[float, int]]] = get_neuron_dicts(
         a_in_time=a_in_time,
         input_node_name=input_node_name,
         node_name=node_name,
@@ -82,12 +80,12 @@ def get_satisfactory_neurons(
 
     manage_printing(
         expected_spikes=expected_spikes,
-        neuron_properties=neuron_properties,
+        neuron_dicts=neuron_dicts,
         node_name=node_name,
         working_snns=working_snns,
         print_behaviour=print_behaviour,
     )
-    return neuron_properties
+    return neuron_dicts
 
 
 # pylint: disable = R0913

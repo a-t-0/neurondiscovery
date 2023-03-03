@@ -17,6 +17,9 @@ from src.neurondiscovery.discover import get_satisfactory_neurons
 # args = parse_cli_args()
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.Explicit_ranges import DiscoveryRanges
+from src.neurondiscovery.find_changing_neurons import (
+    spike_one_timestep_later_per_property,
+)
 from src.neurondiscovery.import_export import (
     load_dict_from_file,
     write_dict_to_file,
@@ -30,22 +33,24 @@ from src.neurondiscovery.Specific_range import Specific_range
 disco: Discovery = Discovery()
 disco_ranges: Discovery = DiscoveryRanges()
 specific_ranges: Discovery = Specific_range()
-neuron_properties: List[Dict[str, Union[float, int]]] = []
+neuron_dicts: List[Dict[str, Union[float, int]]] = []
 filepath: str = "example.json"
 
 # Get expected spike pattern.
 a_in_time: int = 10
+wait_after_input = 4
+
 expected_spikes: List[bool] = n_after_input_at_m(
     a_in_time=a_in_time,
     max_time=50,
-    wait_after_input=4,
+    wait_after_input=wait_after_input,
 )
 
 # If neuron properties already exist, load from file.
 if os.path.isfile(filepath):
-    neuron_properties = load_dict_from_file(filepath)
+    neuron_dicts = load_dict_from_file(filepath)
 else:
-    neuron_properties = get_satisfactory_neurons(
+    neuron_dicts = get_satisfactory_neurons(
         a_in_time=a_in_time,
         disco=disco_ranges,
         expected_spikes=expected_spikes,
@@ -54,12 +59,16 @@ else:
         min_nr_of_neurons=10,
     )
 
-    print("neuron_properties")
-    print(neuron_properties)
     # Write neuron properties to file.
-    write_dict_to_file(
-        filepath="example.json", neuron_properties=neuron_properties
-    )
+    write_dict_to_file(filepath="example.json", neuron_dicts=neuron_dicts)
 
-# Perform secondary loop on property increase/decreases per satisfactory
-# neuron.
+print("neuron_dicts")
+print(neuron_dicts)
+
+max_redundancy: int = 10
+spike_one_timestep_later_per_property(
+    a_in_time=a_in_time,
+    neuron_dicts=neuron_dicts,
+    max_redundancy=max_redundancy,
+    wait_after_input=wait_after_input,
+)
