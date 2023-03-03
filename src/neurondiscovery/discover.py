@@ -3,7 +3,7 @@ settings."""
 # pylint: disable=R0903
 # pylint: disable=R0801
 
-from typing import List, Optional, Union
+from typing import Dict, List, Union
 
 import networkx as nx
 from snnbackends.networkx.LIF_neuron import (
@@ -22,46 +22,48 @@ from src.neurondiscovery.create_input_neuron import create_input_spike_neuron
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.print_behaviour import (
     drawProgressBar,
+    get_synapse_weight,
     print_found_neuron_behaviour,
 )
 from src.neurondiscovery.requirements.checker import (
-    expected_spike_pattern_I,
     verify_input_spike,
     within_neuron_property_bounds,
 )
 
 
 def manage_simulation(
-    *, disco: Discovery, max_time: int, a_in_time: int
+    *,
+    a_in_time: int,
+    disco: Discovery,
+    expected_spikes: List[bool],
+    max_neuron_props: Dict[str, Union[float, int]],
+    min_neuron_props: Dict[str, Union[float, int]],
 ) -> None:
     """Performs a run."""
 
+    # Initialise properties.
     node_name: str = "0"
     input_node_name: str = "input_spike"
-
-    neurons: List[LIF_neuron] = create_neurons(disco=disco)
-    snns: List[nx.DiGraph] = []
     working_snns: List[nx.DiGraph] = []
-    for neuron in neurons:
-        for weight in disco.weight_range:
-            for a_in in disco.a_in_range:
-                snns.append(
-                    create_snn(
-                        a_in=a_in,
-                        a_in_time=a_in_time,
-                        lif_neuron=neuron,
-                        input_node_name=input_node_name,
-                        node_name=node_name,
-                        weight=weight,
-                    )
-                )
+
+    # Create neurons.
+    neurons: List[LIF_neuron] = create_neurons(disco=disco)
+    snns: List[nx.DiGraph] = create_snns(
+        a_in_time=a_in_time,
+        disco=disco,
+        input_node_name=input_node_name,
+        neurons=neurons,
+        node_name=node_name,
+    )
 
     for count, snn in enumerate(snns):
         if simulate_neuron(
             a_in_time=a_in_time,
+            expected_spikes=expected_spikes,
             input_node_name=input_node_name,
+            max_neuron_props=max_neuron_props,
+            min_neuron_props=min_neuron_props,
             node_name=node_name,
-            max_time=max_time,
             snn_graph=snn,
         ):
             working_snns.append(snn)
@@ -91,20 +93,6 @@ def manage_simulation(
 
 
 @typechecked
-def get_synapse_weight(
-    *, snn: nx.DiGraph, left: str, right: str
-) -> Union[None, int]:
-    """Returns the weight of a synapse if it exists.
-
-    Returns None otherwise.
-    """
-    if (left, right) in snn.edges():
-        if "synapse" in snn.edges[(left, right)].keys():
-            return snn.edges[(left, right)]["synapse"].weight
-    return None
-
-
-@typechecked
 def create_neurons(*, disco: Discovery) -> List[LIF_neuron]:
     """Create a particular configuration for the neuron Discovery algorithm."""
     print(f"du:{disco.du_range}")
@@ -131,6 +119,33 @@ def create_neurons(*, disco: Discovery) -> List[LIF_neuron]:
                     )
 
     return neurons
+
+
+@typechecked
+def create_snns(
+    *,
+    a_in_time: int,
+    disco: Discovery,
+    input_node_name: str,
+    neurons: List[LIF_neuron],
+    node_name: str,
+) -> List[nx.DiGraph]:
+    """Creates a list of snns that are to be simulated."""
+    snns: List[nx.DiGraph] = []
+    for neuron in neurons:
+        for weight in disco.weight_range:
+            for a_in in disco.a_in_range:
+                snns.append(
+                    create_snn(
+                        a_in=a_in,
+                        a_in_time=a_in_time,
+                        lif_neuron=neuron,
+                        input_node_name=input_node_name,
+                        node_name=node_name,
+                        weight=weight,
+                    )
+                )
+    return snns
 
 
 @typechecked
@@ -177,26 +192,32 @@ def create_snn(
     return snn_graph
 
 
+# pylint: disable=R0913
 def simulate_neuron(
+    a_in_time: int,
+    expected_spikes: List[bool],
     input_node_name: str,
+    max_neuron_props: Dict[str, Union[float, int]],
+    min_neuron_props: Dict[str, Union[float, int]],
     node_name: str,
-    max_time: int,
     snn_graph: nx.DiGraph,
-    a_in_time: Optional[int] = None,
 ) -> bool:
     """Simulates the neuron."""
     # Simulate neuron for at most max_time timesteps, as long as it behaves
     # as desired.
-    for t in range(0, max_time):
+    for t, expected_spike in enumerate(expected_spikes):
         # Copy the neurons into the new timestep.
         verify_networkx_snn_spec(snn_graph=snn_graph, t=t, backend="nx")
         create_neuron_for_next_timestep(snn_graph=snn_graph, t=t)
-
         verify_networkx_snn_spec(snn_graph=snn_graph, t=t + 1, backend="nx")
+
         # Simulate neuron.
         run_simulation_with_networkx_for_1_timestep(
             snn_graph=snn_graph, t=t + 1
         )
+
+        # If an input spike is used, verify it behaves accordingly.
+        # TODO: facilitate continuously spiking input.
         verify_input_spike(
             a_in_time=a_in_time,
             input_node_name=input_node_name,
@@ -204,16 +225,18 @@ def simulate_neuron(
             t=t,
         )
 
-        # If neuron behaves, continue, otherwise move on to next neuron.
-        if snn_graph.nodes[node_name]["nx_lif"][
-            t
-        ].spikes != expected_spike_pattern_I(a_in_time=a_in_time, t=t):
+        # If neuron behaves, continue, otherwise move zon to next neuron.
+        if snn_graph.nodes[node_name]["nx_lif"][t].spikes != expected_spike:
             return False
         if not within_neuron_property_bounds(
-            lif_neuron=snn_graph.nodes[node_name]["nx_lif"][t]
+            lif_neuron=snn_graph.nodes[node_name]["nx_lif"][t],
+            max_neuron_props=max_neuron_props,
+            min_neuron_props=min_neuron_props,
         ):
             return False
 
+        # If a neuron shows the expected behaviour for more than 100
+        # timesteps, print its behaviour.
         if 100 < t < 150:
             print_neuron_properties_per_graph(
                 G=snn_graph, static=False, t=t, neuron_type="nx_lif"

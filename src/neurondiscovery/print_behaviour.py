@@ -4,6 +4,7 @@ settings."""
 # pylint: disable=R0801
 
 import sys
+from typing import Union
 
 import networkx as nx
 from typeguard import typechecked
@@ -30,3 +31,17 @@ def drawProgressBar(percent: float, barLen: int = 20) -> None:
             progress += " "
     sys.stdout.write(f"[ {progress} ] {percent * 100:.2f}%")
     sys.stdout.flush()
+
+
+@typechecked
+def get_synapse_weight(
+    *, snn: nx.DiGraph, left: str, right: str
+) -> Union[None, int]:
+    """Returns the weight of a synapse if it exists.
+
+    Returns None otherwise.
+    """
+    if (left, right) in snn.edges():
+        if "synapse" in snn.edges[(left, right)].keys():
+            return snn.edges[(left, right)]["synapse"].weight
+    return None
