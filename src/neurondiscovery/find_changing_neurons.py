@@ -28,8 +28,8 @@ def spike_one_timestep_later_per_property(
     #
     for neuron_dict in neuron_dicts:
         for the_property in [
-            "a_in",
-            "a_in_time",
+            # "a_in",
+            # "a_in_time",
             "bias",
             "du",
             "dv",
@@ -53,6 +53,14 @@ def spike_one_timestep_later_per_property(
             ):
                 print(f"Found for:{the_property} at:")
                 print(neuron_dict)
+                print_changing_neuron(
+                    a_in_time=a_in_time,
+                    neuron_dict=neuron_dict,
+                    the_property=the_property,
+                    max_redundancy=max_redundancy,
+                    wait_after_input=wait_after_input,
+                )
+
                 sys.exit()
 
 
@@ -68,7 +76,7 @@ def changes_over_time_correctly(
 
     # neuron.
     """
-    for _ in range(1, max_redundancy + 1):
+    for red_level in range(1, max_redundancy + 1):
         # Update discovery object.
         update_neuron_property(disco=disco, the_property=the_property)
 
@@ -95,7 +103,9 @@ def changes_over_time_correctly(
         # if not empty list, proceed.
         if len(neuron_dicts) == []:
             return False
-    return True
+        if red_level == max_redundancy:
+            return True
+    return False
 
 
 @typechecked
@@ -113,3 +123,44 @@ def update_neuron_property(disco: Discovery, the_property: str) -> None:
         disco.vth_range = [disco.vth_range[0] + 1]
     if the_property == "weight":
         disco.weight_range = [disco.weight_range[0] + 1]
+
+
+@typechecked
+def print_changing_neuron(
+    a_in_time: int,
+    neuron_dict: Dict[str, Union[float, int]],
+    the_property: str,
+    max_redundancy: int,
+    wait_after_input: int,
+) -> None:
+    """Perform secondary loop on property increase/decreases per satisfactory.
+
+    # neuron.
+    """
+
+    # specify disco.
+    disco: Discovery = Specific_range()
+    disco.du_range = [neuron_dict["du"]]
+    disco.dv_range = [neuron_dict["dv"]]
+    disco.bias_range = [neuron_dict["bias"]]
+    disco.vth_range = [neuron_dict["vth"]]
+    disco.weight_range = [neuron_dict["weight"]]
+    disco.a_in_range = [int(neuron_dict["a_in"])]
+
+    # Simulate the neuron for n timesteps. Print
+
+    for red_level in range(1, max_redundancy + 1):
+        # Update discovery object.
+        update_neuron_property(disco=disco, the_property=the_property)
+
+        # Update wait_after_input.
+        wait_after_input = wait_after_input + 1
+
+        # specify spike pattern.
+        expected_spikes: List[bool] = n_after_input_at_m(
+            a_in_time=a_in_time,
+            max_time=50,
+            wait_after_input=wait_after_input,
+        )
+        for t, spikes in enumerate(expected_spikes):
+            print(f"{red_level}, {t}:{spikes}")
