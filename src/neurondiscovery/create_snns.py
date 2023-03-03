@@ -63,13 +63,15 @@ def create_input_spike_neuron(
 
 
 @typechecked
-def create_neurons(*, disco: Discovery) -> List[LIF_neuron]:
+def create_neurons(*, disco: Discovery, verbose: bool) -> List[LIF_neuron]:
     """Create a particular configuration for the neuron Discovery algorithm."""
-    print(f"du:{disco.du_range}")
-    print(f"dv:{disco.dv_range}")
-    print(f"bias:{disco.bias_range}")
-    print(f"vth:{disco.vth_range}")
-    print(f"weight:{disco.weight_range}")
+    if verbose:
+        print("")
+        print(f"du:{disco.du_range}")
+        print(f"dv:{disco.dv_range}")
+        print(f"bias:{disco.bias_range}")
+        print(f"vth:{disco.vth_range}")
+        print(f"weight:{disco.weight_range}")
 
     neurons: List[LIF_neuron] = []
     # pylint: disable=R1702

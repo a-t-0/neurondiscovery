@@ -57,13 +57,15 @@ else:
         max_neuron_props={"vth": 100},
         min_neuron_props={"vth": -100},
         min_nr_of_neurons=10,
+        verbose=True,
     )
 
     # Write neuron properties to file.
     write_dict_to_file(filepath="example.json", neuron_dicts=neuron_dicts)
 
 print("neuron_dicts")
-print(neuron_dicts)
+for neuron_dict in neuron_dicts:
+    print(neuron_dict)
 
 max_redundancy: int = 10
 spike_one_timestep_later_per_property(

@@ -36,6 +36,7 @@ def get_satisfactory_neurons(
     expected_spikes: List[bool],
     max_neuron_props: Dict[str, Union[float, int]],
     min_neuron_props: Dict[str, Union[float, int]],
+    verbose: bool,
     print_behaviour: Optional[bool] = None,
     min_nr_of_neurons: Optional[int] = None,
 ) -> List[Dict[str, Union[float, int]]]:
@@ -46,8 +47,9 @@ def get_satisfactory_neurons(
     input_node_name: str = "input_spike"
 
     # Create neurons.
-    neurons: List[LIF_neuron] = create_neurons(disco=disco)
-    print(f"Created {len(neurons)} neurons")
+    neurons: List[LIF_neuron] = create_neurons(disco=disco, verbose=verbose)
+    if verbose:
+        print(f"Created {len(neurons)} neurons")
 
     # Create snns.
     snns: List[nx.DiGraph] = create_snns(
@@ -57,7 +59,8 @@ def get_satisfactory_neurons(
         neurons=neurons,
         node_name=node_name,
     )
-    print(f"Created {len(snns)} snns.")
+    if verbose:
+        print(f"Created {len(snns)} snns.")
 
     working_snns: List[nx.DiGraph] = manage_simulation(
         a_in_time=a_in_time,
@@ -67,6 +70,7 @@ def get_satisfactory_neurons(
         max_neuron_props=max_neuron_props,
         min_neuron_props=min_neuron_props,
         snns=snns,
+        verbose=verbose,
         min_nr_of_neurons=min_nr_of_neurons,
     )
 
@@ -78,13 +82,14 @@ def get_satisfactory_neurons(
         snns=working_snns,
     )
 
-    manage_printing(
-        expected_spikes=expected_spikes,
-        neuron_dicts=neuron_dicts,
-        node_name=node_name,
-        working_snns=working_snns,
-        print_behaviour=print_behaviour,
-    )
+    if verbose:
+        manage_printing(
+            expected_spikes=expected_spikes,
+            neuron_dicts=neuron_dicts,
+            node_name=node_name,
+            working_snns=working_snns,
+            print_behaviour=print_behaviour,
+        )
     return neuron_dicts
 
 
@@ -97,6 +102,7 @@ def manage_simulation(
     max_neuron_props: Dict[str, Union[float, int]],
     min_neuron_props: Dict[str, Union[float, int]],
     snns: List[nx.DiGraph],
+    verbose: bool,
     min_nr_of_neurons: Optional[int] = None,
 ) -> List[nx.DiGraph]:
     """Performs the neuron simulations for the snns."""
@@ -117,9 +123,12 @@ def manage_simulation(
             working_snns.append(snn)
 
         count = count + 1
-        drawProgressBar(
-            percent=count / len(snns), barLen=100, n_found=len(working_snns)
-        )
+        if verbose:
+            drawProgressBar(
+                percent=count / len(snns),
+                barLen=100,
+                n_found=len(working_snns),
+            )
         if (
             min_nr_of_neurons is not None
             and len(working_snns) > min_nr_of_neurons

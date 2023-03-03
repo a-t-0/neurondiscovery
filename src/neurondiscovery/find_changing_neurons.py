@@ -60,7 +60,6 @@ def spike_one_timestep_later_per_property(
                     max_redundancy=max_redundancy,
                     wait_after_input=wait_after_input,
                 )
-
                 sys.exit()
 
 
@@ -97,6 +96,7 @@ def changes_over_time_correctly(
             expected_spikes=expected_spikes,
             max_neuron_props={"vth": 100},
             min_neuron_props={"vth": -100},
+            verbose=False,
             min_nr_of_neurons=10,
         )
 
@@ -137,6 +137,7 @@ def print_changing_neuron(
 
     # neuron.
     """
+    lines: List = []
 
     # specify disco.
     disco: Discovery = Specific_range()
@@ -148,10 +149,11 @@ def print_changing_neuron(
     disco.a_in_range = [int(neuron_dict["a_in"])]
 
     # Simulate the neuron for n timesteps. Print
-
+    print("The discovery ranges for redundancy respectively are:")
     for red_level in range(1, max_redundancy + 1):
         # Update discovery object.
         update_neuron_property(disco=disco, the_property=the_property)
+        print(disco.__dict__)
 
         # Update wait_after_input.
         wait_after_input = wait_after_input + 1
@@ -162,5 +164,13 @@ def print_changing_neuron(
             max_time=50,
             wait_after_input=wait_after_input,
         )
+
+        if len(lines) != len(expected_spikes):
+            for t in range(0, len(expected_spikes)):
+                lines.append(str(t))
         for t, spikes in enumerate(expected_spikes):
-            print(f"{red_level}, {t}:{spikes}")
+            lines[t] = lines[t] + f"{red_level}:{spikes} | "
+    print("")
+    print("[t], [redundancy level]: spikes |")
+    for line in lines:
+        print(line)
