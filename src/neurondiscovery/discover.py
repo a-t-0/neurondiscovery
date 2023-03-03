@@ -3,8 +3,7 @@ settings."""
 # pylint: disable=R0903
 # pylint: disable=R0801
 
-import sys
-from typing import Optional, Tuple
+from typing import List, Optional, Union
 
 import networkx as nx
 from snnbackends.networkx.LIF_neuron import (
@@ -32,76 +31,118 @@ from src.neurondiscovery.requirements.checker import (
 )
 
 
+def manage_simulation(
+    *, disco: Discovery, max_time: int, a_in_time: int
+) -> None:
+    """Performs a run."""
+
+    node_name: str = "0"
+    input_node_name: str = "input_spike"
+
+    neurons: List[LIF_neuron] = create_neurons(disco=disco)
+    snns: List[nx.DiGraph] = []
+    working_snns: List[nx.DiGraph] = []
+    for neuron in neurons:
+        for weight in disco.weight_range:
+            for a_in in disco.a_in_range:
+                snns.append(
+                    create_snn(
+                        a_in=a_in,
+                        a_in_time=a_in_time,
+                        lif_neuron=neuron,
+                        input_node_name=input_node_name,
+                        node_name=node_name,
+                        weight=weight,
+                    )
+                )
+
+    for count, snn in enumerate(snns):
+        if simulate_neuron(
+            a_in_time=a_in_time,
+            input_node_name=input_node_name,
+            node_name=node_name,
+            max_time=max_time,
+            snn_graph=snn,
+        ):
+            working_snns.append(snn)
+
+        count = count + 1
+        drawProgressBar(percent=count / len(snns), barLen=100)
+
+    # Print found neurons
+    print("")
+    if len(working_snns) > 0:
+        print("Found the following neurons that satisfy the requirements:")
+    else:
+        print("Did not find neurons that satisfy the requirements.")
+    for count, working_snn in enumerate(working_snns):
+        print_found_neuron_behaviour(snn_graph=working_snn, t_max=50)
+        neuron = working_snn.nodes[node_name]["nx_lif"][0]
+        recurrent_weight = get_synapse_weight(
+            snn=working_snn, left=node_name, right=node_name
+        )
+        print(f"du=       {neuron.du.get()}")
+        print(f"dv=       {neuron.dv.get()}")
+        print(f"vth=      {neuron.vth.get()}")
+        print(f"bias=     {neuron.bias.get()}")
+        print(f"weight=   {recurrent_weight}")
+        print("a_in=     TODO")
+        print(f"a_in_time={disco.a_in_time}")
+
+
 @typechecked
-def discover_neuron_type(*, disco: Discovery) -> None:
+def get_synapse_weight(
+    *, snn: nx.DiGraph, left: str, right: str
+) -> Union[None, int]:
+    """Returns the weight of a synapse if it exists.
+
+    Returns None otherwise.
+    """
+    if (left, right) in snn.edges():
+        if "synapse" in snn.edges[(left, right)].keys():
+            return snn.edges[(left, right)]["synapse"].weight
+    return None
+
+
+@typechecked
+def create_neurons(*, disco: Discovery) -> List[LIF_neuron]:
     """Create a particular configuration for the neuron Discovery algorithm."""
-    max_time: int = 10000
-    count = 0
-    total = (
-        len(disco.du_range)
-        * len(disco.dv_range)
-        * len(disco.vth_range)
-        * len(disco.bias_range)
-        * len(disco.weight_range)
-        * len(disco.a_in_range)
-    )
     print(f"du:{disco.du_range}")
     print(f"dv:{disco.dv_range}")
     print(f"bias:{disco.bias_range}")
     print(f"vth:{disco.vth_range}")
     print(f"weight:{disco.weight_range}")
 
+    neurons: List[LIF_neuron] = []
     # pylint: disable=R1702
     for du in disco.du_range:
         for dv in disco.dv_range:
             for bias in disco.bias_range:
                 for vth in disco.vth_range:
-                    for weight in disco.weight_range:
-                        for a_in in disco.a_in_range:
-                            # Create neuron.
-                            lif_neuron = LIF_neuron(
-                                name="",
-                                bias=float(bias),
-                                du=float(du),
-                                dv=float(dv),
-                                vth=float(vth),
-                            )
-                            count = count + 1
-                            drawProgressBar(percent=count / total, barLen=100)
-                            # if count / total> 0.45:
-                            (
-                                is_expected,
-                                snn_graph,
-                            ) = create_snn(
-                                lif_neuron=lif_neuron,
-                                max_time=max_time,
-                                weight=weight,
-                                a_in=a_in,
-                                a_in_time=disco.a_in_time,
-                            )
-                            if is_expected:
-                                print_found_neuron_behaviour(
-                                    snn_graph=snn_graph, t_max=50
-                                )
-                                print(f"du=       {du}")
-                                print(f"dv=       {dv}")
-                                print(f"vth=      {vth}")
-                                print(f"bias=     {bias}")
-                                print(f"weight=   {weight}")
-                                print(f"a_in=     {a_in}")
-                                print(f"a_in_time={disco.a_in_time}")
-                                print("FOUND")
-                                sys.exit()
+                    # Create neuron.
+                    neurons.append(
+                        LIF_neuron(
+                            name="",
+                            bias=float(bias),
+                            du=float(du),
+                            dv=float(dv),
+                            vth=float(vth),
+                        )
+                    )
+
+    return neurons
 
 
 @typechecked
 def create_snn(
-    lif_neuron: LIF_neuron,
-    max_time: int,
-    weight: int,
+    *,
     a_in: float,
-    a_in_time: Optional[int] = None,
-) -> Tuple[bool, nx.DiGraph]:
+    a_in_time: int,
+    node_name: str,
+    input_node_name: str,
+    lif_neuron: LIF_neuron,
+    weight: int,
+) -> nx.DiGraph:
     """Determines whether a neuron is of type I.
 
     Type I is arbitrarily defined as: 'does not spike for 2 timesteps,
@@ -110,8 +151,6 @@ def create_snn(
     """
 
     snn_graph = nx.DiGraph()
-    node_name: str = "0"
-    input_node_name: str = "input_spike"
     snn_graph.add_nodes_from(
         [node_name, input_node_name],
     )
@@ -127,33 +166,24 @@ def create_snn(
         ),
     )
 
-    create_input_spike_neuron(
-        a_in_time=a_in_time,
-        a_in=a_in,
-        input_node_name=input_node_name,
-        node_name=node_name,
-        snn_graph=snn_graph,
-    )
-
-    return simulate_neuron(
-        a_in_time=a_in_time,
-        input_node_name=input_node_name,
-        node_name=node_name,
-        max_time=max_time,
-        snn_graph=snn_graph,
-    )
-
-
-# pylint: disable=R0913
+    if a_in != 0:
+        create_input_spike_neuron(
+            a_in_time=a_in_time,
+            a_in=a_in,
+            input_node_name=input_node_name,
+            node_name=node_name,
+            snn_graph=snn_graph,
+        )
+    return snn_graph
 
 
 def simulate_neuron(
-    a_in_time: Optional[int],
     input_node_name: str,
     node_name: str,
     max_time: int,
     snn_graph: nx.DiGraph,
-) -> Tuple[bool, nx.DiGraph]:
+    a_in_time: Optional[int] = None,
+) -> bool:
     """Simulates the neuron."""
     # Simulate neuron for at most max_time timesteps, as long as it behaves
     # as desired.
@@ -178,15 +208,15 @@ def simulate_neuron(
         if snn_graph.nodes[node_name]["nx_lif"][
             t
         ].spikes != expected_spike_pattern_I(a_in_time=a_in_time, t=t):
-            return False, snn_graph
+            return False
         if not within_neuron_property_bounds(
             lif_neuron=snn_graph.nodes[node_name]["nx_lif"][t]
         ):
-            return False, snn_graph
+            return False
 
         if 100 < t < 150:
             print_neuron_properties_per_graph(
                 G=snn_graph, static=False, t=t, neuron_type="nx_lif"
             )
 
-    return True, snn_graph
+    return True

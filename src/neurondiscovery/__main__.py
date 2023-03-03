@@ -8,7 +8,7 @@ that invokes this script."""
 # mdsa_configs = get_algo_configs(algo_spec=mdsa.__dict__)
 # verify_algo_configs(algo_name="MDSA", algo_configs=mdsa_configs)
 
-from src.neurondiscovery.discover import discover_neuron_type
+from src.neurondiscovery.discover import manage_simulation
 
 # Parse command line interface arguments to determine what this script does.
 # args = parse_cli_args()
@@ -21,5 +21,5 @@ disco_ranges = DiscoveryRanges()
 specific_ranges = Specific_range()
 
 # Discovery_algo(disco=disco)
-discover_neuron_type(disco=disco_ranges)
+manage_simulation(disco=disco_ranges, max_time=100, a_in_time=5)
 # Discovery_algo(disco=specific_ranges)
