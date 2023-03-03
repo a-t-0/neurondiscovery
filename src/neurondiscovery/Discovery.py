@@ -68,7 +68,6 @@ class Discovery:
             max_val=weight_max,
         )
         self.a_in_range = list(range(1, 10))
-        self.a_in_time = 4
 
     @typechecked
     def get_range(

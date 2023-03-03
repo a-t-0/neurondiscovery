@@ -40,4 +40,3 @@ class Specific_range(Discovery):
 
         # Specify supported values for weight
         self.a_in_range = list(range(5, 6))
-        self.a_in_time = 14

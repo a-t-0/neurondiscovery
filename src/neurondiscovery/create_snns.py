@@ -136,9 +136,21 @@ def create_snn(
     """
 
     snn_graph = nx.DiGraph()
-    snn_graph.add_nodes_from(
-        [node_name, input_node_name],
-    )
+    if a_in != 0:
+        snn_graph.add_nodes_from(
+            [node_name, input_node_name],
+        )
+        create_input_spike_neuron(
+            a_in_time=a_in_time,
+            a_in=a_in,
+            input_node_name=input_node_name,
+            node_name=node_name,
+            snn_graph=snn_graph,
+        )
+    else:
+        snn_graph.add_nodes_from(
+            [node_name],
+        )
 
     # Create tested neuron.
     snn_graph.nodes[node_name]["nx_lif"] = [lif_neuron]
@@ -151,12 +163,4 @@ def create_snn(
         ),
     )
 
-    if a_in != 0:
-        create_input_spike_neuron(
-            a_in_time=a_in_time,
-            a_in=a_in,
-            input_node_name=input_node_name,
-            node_name=node_name,
-            snn_graph=snn_graph,
-        )
     return snn_graph

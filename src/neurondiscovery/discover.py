@@ -3,7 +3,7 @@ settings."""
 # pylint: disable=R0903
 # pylint: disable=R0801
 
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import networkx as nx
 from snnbackends.networkx.LIF_neuron import (
@@ -20,8 +20,8 @@ from src.neurondiscovery.create_snns import create_neurons, create_snns
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.print_behaviour import (
     drawProgressBar,
-    get_synapse_weight,
     print_found_neuron_behaviour,
+    print_neuron_properties,
 )
 from src.neurondiscovery.requirements.checker import (
     verify_input_spike,
@@ -36,6 +36,8 @@ def manage_simulation(
     expected_spikes: List[bool],
     max_neuron_props: Dict[str, Union[float, int]],
     min_neuron_props: Dict[str, Union[float, int]],
+    print_behaviour: Optional[bool] = None,
+    min_nr_of_neurons: Optional[int] = None,
 ) -> None:
     """Performs a run."""
 
@@ -46,6 +48,9 @@ def manage_simulation(
 
     # Create neurons.
     neurons: List[LIF_neuron] = create_neurons(disco=disco)
+    print(f"Created {len(neurons)} neurons")
+
+    # Create snns.
     snns: List[nx.DiGraph] = create_snns(
         a_in_time=a_in_time,
         disco=disco,
@@ -53,7 +58,9 @@ def manage_simulation(
         neurons=neurons,
         node_name=node_name,
     )
+    print(f"Created {len(snns)} snns.")
 
+    # Simulate snns.
     for count, snn in enumerate(snns):
         if simulate_neuron(
             a_in_time=a_in_time,
@@ -67,30 +74,38 @@ def manage_simulation(
             working_snns.append(snn)
 
         count = count + 1
-        drawProgressBar(percent=count / len(snns), barLen=100)
+        drawProgressBar(
+            percent=count / len(snns), barLen=100, n_found=len(working_snns)
+        )
+        if (
+            min_nr_of_neurons is not None
+            and len(working_snns) > min_nr_of_neurons
+        ):
+            break
 
-    # Print found neurons
+    # Print found neuron results.
     print("")
     if len(working_snns) > 0:
         print("Found the following neurons that satisfy the requirements:")
     else:
-        print("Did not find neurons that satisfy the requirements.")
-    for count, working_snn in enumerate(working_snns):
+        print(
+            "Did not find neurons that satisfy the requirements."
+            + f"{expected_spikes}"
+        )
+
         print("")
+    if print_behaviour:
         print_found_neuron_behaviour(
-            snn_graph=working_snn, t_max=min(len(expected_spikes), 50)
+            node_name=node_name,
+            snns=working_snns,
+            t_max=min(len(expected_spikes), 50),
         )
-        neuron = working_snn.nodes[node_name]["nx_lif"][0]
-        recurrent_weight = get_synapse_weight(
-            snn=working_snn, left=node_name, right=node_name
-        )
-        print(f"du=       {neuron.du.get()}")
-        print(f"dv=       {neuron.dv.get()}")
-        print(f"vth=      {neuron.vth.get()}")
-        print(f"bias=     {neuron.bias.get()}")
-        print(f"weight=   {recurrent_weight}")
-        print("a_in=     TODO")
-        print(f"a_in_time={disco.a_in_time}")
+    print_neuron_properties(
+        a_in_time=a_in_time,
+        input_node_name=input_node_name,
+        node_name=node_name,
+        snns=working_snns,
+    )
 
 
 # pylint: disable=R0913
