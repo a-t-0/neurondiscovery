@@ -33,14 +33,6 @@ def verify_input_spike(
 
 
 @typechecked
-def expected_spike_pattern_I(a_in_time: int, t: int) -> bool:
-    """Specifies the expected spike pattern for neuron type I."""
-    if t < 2 + a_in_time:
-        return False
-    return True
-
-
-@typechecked
 def within_neuron_property_bounds(
     lif_neuron: LIF_neuron,
     max_neuron_props: Dict[str, Union[float, int]],
@@ -56,4 +48,12 @@ def within_neuron_property_bounds(
     for attr, max_val in max_neuron_props.items():
         if getattr(lif_neuron, attr).get() > max_val:
             return False
+    return True
+
+
+@typechecked
+def expected_spike_pattern_I(a_in_time: int, t: int) -> bool:
+    """Specifies the expected spike pattern for neuron type I."""
+    if t < 2 + a_in_time:
+        return False
     return True
