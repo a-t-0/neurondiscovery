@@ -1,0 +1,32 @@
+[
+  {
+    "a_in": 1,
+    "a_in_time": 10,
+    "bias": 0.0,
+    "du": 0.0,
+    "dv": 0.0,
+    "property": "vth",
+    "vth": 0.0,
+    "weight": 4
+  },
+  {
+    "a_in": 1,
+    "a_in_time": 10,
+    "bias": 0.0,
+    "du": 0.0,
+    "dv": 0.1,
+    "property": "vth",
+    "vth": 0.0,
+    "weight": 4
+  },
+  {
+    "a_in": 1,
+    "a_in_time": 10,
+    "bias": 0.0,
+    "du": 0.1,
+    "dv": 0.0,
+    "property": "vth",
+    "vth": 0.0,
+    "weight": 4
+  }
+]

@@ -56,7 +56,7 @@ def print_found_neuron_behaviour(
 
 
 @typechecked
-def get_neuron_dicts(
+def get_node_name_neuron_dicts(
     *,
     a_in_time: int,
     input_node_name: str,
@@ -110,9 +110,7 @@ def drawProgressBar(
 
 
 @typechecked
-def get_synapse_weight(
-    *, snn: nx.DiGraph, left: str, right: str
-) -> Union[None, int]:
+def get_synapse_weight(*, snn: nx.DiGraph, left: str, right: str) -> int:
     """Returns the weight of a synapse if it exists.
 
     Returns None otherwise.
@@ -120,4 +118,4 @@ def get_synapse_weight(
     if (left, right) in snn.edges():
         if "synapse" in snn.edges[(left, right)].keys():
             return snn.edges[(left, right)]["synapse"].weight
-    return None
+    return 0

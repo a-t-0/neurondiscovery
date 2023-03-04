@@ -15,12 +15,13 @@ from snnbackends.networkx.run_on_networkx import (
     run_simulation_with_networkx_for_1_timestep,
 )
 from snnbackends.verify_graph_is_snn import verify_networkx_snn_spec
+from typeguard import typechecked
 
 from src.neurondiscovery.create_snns import create_neurons, create_snns
 from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.print_behaviour import (
     drawProgressBar,
-    get_neuron_dicts,
+    get_node_name_neuron_dicts,
     manage_printing,
 )
 from src.neurondiscovery.requirements.checker import (
@@ -29,6 +30,7 @@ from src.neurondiscovery.requirements.checker import (
 )
 
 
+@typechecked
 def get_satisfactory_neurons(
     *,
     a_in_time: int,
@@ -75,7 +77,9 @@ def get_satisfactory_neurons(
     )
 
     # Get neuron properties
-    neuron_dicts: List[Dict[str, Union[float, int]]] = get_neuron_dicts(
+    neuron_dicts: List[
+        Dict[str, Union[float, int]]
+    ] = get_node_name_neuron_dicts(
         a_in_time=a_in_time,
         input_node_name=input_node_name,
         node_name=node_name,
@@ -94,6 +98,7 @@ def get_satisfactory_neurons(
 
 
 # pylint: disable = R0913
+@typechecked
 def manage_simulation(
     a_in_time: int,
     expected_spikes: List[bool],
@@ -119,8 +124,18 @@ def manage_simulation(
             min_neuron_props=min_neuron_props,
             node_name=node_name,
             snn_graph=snn,
+            verbose=verbose,
         ):
             working_snns.append(snn)
+            print("Checking primary neuron:")
+            print(
+                get_node_name_neuron_dicts(
+                    a_in_time=a_in_time,
+                    input_node_name=input_node_name,
+                    node_name=node_name,
+                    snns=[snn],
+                )
+            )
 
         count = count + 1
         if verbose:
@@ -138,6 +153,7 @@ def manage_simulation(
 
 
 # pylint: disable=R0913
+@typechecked
 def simulate_neuron(
     a_in_time: int,
     expected_spikes: List[bool],
@@ -146,6 +162,7 @@ def simulate_neuron(
     min_neuron_props: Dict[str, Union[float, int]],
     node_name: str,
     snn_graph: nx.DiGraph,
+    verbose: bool,
 ) -> bool:
     """Simulates the neuron."""
     # Simulate neuron for at most max_time timesteps, as long as it behaves
@@ -155,6 +172,14 @@ def simulate_neuron(
         verify_networkx_snn_spec(snn_graph=snn_graph, t=t, backend="nx")
         create_neuron_for_next_timestep(snn_graph=snn_graph, t=t)
         verify_networkx_snn_spec(snn_graph=snn_graph, t=t + 1, backend="nx")
+
+        neuron = snn_graph.nodes[node_name]["nx_lif"][t]
+        if verbose:
+            print(
+                f"{t}:{neuron.spikes}, bias={neuron.bias.get()}, u="
+                + f"{neuron.u.get()}, v={neuron.v.get()}, vth="
+                + f"{neuron.vth.get()}"
+            )
 
         # Simulate neuron.
         run_simulation_with_networkx_for_1_timestep(

@@ -1,7 +1,6 @@
 """Finds neurons that change over time, whilst still satisfying some pattern
 (that may also change over time)."""
 import copy
-import sys
 from typing import Dict, List, Union
 
 from typeguard import typechecked
@@ -11,31 +10,36 @@ from src.neurondiscovery.Discovery import Discovery
 from src.neurondiscovery.neuron_types.after_input.n_after_input_at_m import (
     n_after_input_at_m,
 )
+from src.neurondiscovery.print_behaviour import drawProgressBar
 from src.neurondiscovery.Specific_range import Specific_range
 
 
 @typechecked
 def spike_one_timestep_later_per_property(
     a_in_time: int,
-    neuron_dicts: List[Dict[str, Union[float, int]]],
+    neuron_dicts: List[Dict[str, Union[float, int, str]]],
     max_redundancy: int,
     wait_after_input: int,
-) -> None:
+) -> List[Dict[str, Union[int, float, str]]]:
     """Perform secondary loop on property increase/decreases per satisfactory.
 
     # neuron.
     """
     #
+    count: int = 0
+    explored_properties: List[str] = [
+        "a_in",
+        "a_in_time",
+        "bias",
+        "du",
+        "dv",
+        "vth",
+        "weight",
+    ]
+    found_neurons: List[Dict[str, Union[int, float, str]]] = []
     for neuron_dict in neuron_dicts:
-        for the_property in [
-            # "a_in",
-            # "a_in_time",
-            "bias",
-            "du",
-            "dv",
-            "vth",
-            "weight",
-        ]:
+        for the_property in explored_properties:
+            count += 1
             # specify disco.
             original_disco: Discovery = Specific_range()
             original_disco.du_range = [neuron_dict["du"]]
@@ -44,23 +48,23 @@ def spike_one_timestep_later_per_property(
             original_disco.vth_range = [neuron_dict["vth"]]
             original_disco.weight_range = [neuron_dict["weight"]]
             original_disco.a_in_range = [int(neuron_dict["a_in"])]
-            if changes_over_time_correctly(
-                a_in_time=a_in_time,
-                disco=copy.deepcopy(original_disco),
-                max_redundancy=max_redundancy,
-                the_property=the_property,
-                wait_after_input=copy.deepcopy(wait_after_input),
-            ):
-                print(f"Found for:{the_property} at:")
-                print(neuron_dict)
-                print_changing_neuron(
+            if count / (len(neuron_dicts) * len(explored_properties)) > 0.5470:
+                if changes_over_time_correctly(
                     a_in_time=a_in_time,
-                    neuron_dict=neuron_dict,
-                    the_property=the_property,
+                    disco=copy.deepcopy(original_disco),
                     max_redundancy=max_redundancy,
-                    wait_after_input=wait_after_input,
+                    the_property=the_property,
+                    wait_after_input=copy.deepcopy(wait_after_input),
+                ):
+                    found_neurons.append(neuron_dict)
+                    found_neurons[-1]["property"] = the_property
+                drawProgressBar(
+                    percent=count
+                    / (len(neuron_dicts) * len(explored_properties)),
+                    barLen=100,
+                    n_found=len(found_neurons),
                 )
-                sys.exit()
+    return found_neurons
 
 
 @typechecked
@@ -101,9 +105,10 @@ def changes_over_time_correctly(
         )
 
         # if not empty list, proceed.
-        if len(neuron_dicts) == []:
+        if len(neuron_dicts) == 0:
             return False
         if red_level == max_redundancy:
+            print(f"Changing: {the_property}, red_level{red_level}")
             return True
     return False
 
@@ -128,7 +133,7 @@ def update_neuron_property(disco: Discovery, the_property: str) -> None:
 @typechecked
 def print_changing_neuron(
     a_in_time: int,
-    neuron_dict: Dict[str, Union[float, int]],
+    neuron_dict: Dict[str, Union[float, int, str]],
     the_property: str,
     max_redundancy: int,
     wait_after_input: int,

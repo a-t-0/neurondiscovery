@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 @typechecked
 def write_dict_to_file(
-    filepath: str, neuron_dicts: List[Dict[str, Union[float, int]]]
+    filepath: str, neuron_dicts: List[Dict[str, Union[float, int, str]]]
 ) -> None:
     """Writes dict to json file."""
     # Serialize data into file:
@@ -22,7 +22,7 @@ def write_dict_to_file(
         )
 
     # Assert data can be loaded from file.
-    loaded_data: List[Dict[str, Union[float, int]]] = load_dict_from_file(
+    loaded_data: List[Dict[str, Union[float, int, str]]] = load_dict_from_file(
         filepath
     )
 
@@ -32,7 +32,9 @@ def write_dict_to_file(
 
 
 @typechecked
-def load_dict_from_file(filepath: str) -> List[Dict[str, Union[float, int]]]:
+def load_dict_from_file(
+    filepath: str,
+) -> List[Dict[str, Union[float, int, str]]]:
     """Loads json file into list of dicts."""
 
     # Assert file exists.
