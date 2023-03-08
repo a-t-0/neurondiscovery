@@ -7,6 +7,13 @@ from typeguard import typechecked
 
 
 @typechecked
+def create_output_dir_if_not_exists(directory: str) -> None:
+    """Creates in root dir."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+@typechecked
 def write_dict_to_file(
     filepath: str, neuron_dicts: List[Dict[str, Union[float, int, str]]]
 ) -> None:

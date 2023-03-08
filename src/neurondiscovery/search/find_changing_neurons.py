@@ -5,21 +5,11 @@ from typing import Dict, List, Union
 
 from typeguard import typechecked
 
-from neurondiscovery.src.neurondiscovery.grid_settings.Discovery import (
-    Discovery,
-)
-from neurondiscovery.src.neurondiscovery.grid_settings.Specific_range import (
-    Specific_range,
-)
-from neurondiscovery.src.neurondiscovery.search.discover import (
-    get_satisfactory_neurons,
-)
-from neurondiscovery.src.neurondiscovery.search.print_behaviour import (
-    drawProgressBar,
-)
-from src.neurondiscovery.spike_patterns.after_input.n_after_input_at_m import (
-    n_after_input_at_m,
-)
+from neurondiscovery.grid_settings.Discovery import Discovery
+from neurondiscovery.grid_settings.Specific_range import Specific_range
+from neurondiscovery.search.discover import get_satisfactory_neurons
+from neurondiscovery.search.print_behaviour import drawProgressBar
+from neurondiscovery.spike_patterns.expected_patterns import n_after_input_at_m
 
 
 @typechecked

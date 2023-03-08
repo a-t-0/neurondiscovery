@@ -9,9 +9,7 @@ import networkx as nx
 from snnbackends.networkx.LIF_neuron import LIF_neuron, Synapse
 from typeguard import typechecked
 
-from neurondiscovery.src.neurondiscovery.grid_settings.Discovery import (
-    Discovery,
-)
+from neurondiscovery.grid_settings.Discovery import Discovery
 
 
 # pylint: disable=R0913

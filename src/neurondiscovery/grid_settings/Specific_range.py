@@ -3,9 +3,7 @@ settings."""
 
 from typeguard import typechecked
 
-from neurondiscovery.src.neurondiscovery.grid_settings.Discovery import (
-    Discovery,
-)
+from neurondiscovery.grid_settings.Discovery import Discovery
 
 
 # pylint: disable=R0902
