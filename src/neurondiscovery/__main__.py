@@ -39,9 +39,13 @@ neuron_dicts: List[Dict[str, Union[float, int]]] = []
 filepath: str = "found_neurons.json"
 
 # Get expected spike pattern.
+# TODO: after finding a neuron loop over it with varying a_in_times to verify
+# the properties still hold (and are not a lucky coincidence for a neuron that
+# starts spiking around a_in_time=10 anyways.)
 a_in_time: int = 10
 wait_after_input = 1
 
+# TODO: specify which neuron this is and explain why.
 expected_spikes: List[bool] = n_after_input_at_m(
     a_in_time=a_in_time,
     max_time=50,
@@ -49,6 +53,7 @@ expected_spikes: List[bool] = n_after_input_at_m(
 )
 
 # If neuron properties already exist, load from file.
+# TODO: support storing different neuron types under different names.
 if os.path.isfile(filepath):
     neuron_dicts = load_dict_from_file(filepath)
 else:
@@ -70,6 +75,7 @@ print("Neuron_dicts that are scanned for changing over time:")
 for neuron_dict in neuron_dicts:
     print(neuron_dict)
 
+# TODO: allow searching for max_redundancy for which a value is still found.
 max_redundancy: int = 4
 found_neurons = spike_one_timestep_later_per_property(
     a_in_time=a_in_time,
@@ -91,4 +97,5 @@ else:
             max_redundancy=max_redundancy,
             wait_after_input=wait_after_input,
         )
+# TODO: support storing different neuron types under different names.
 # write_dict_to_file(filepath="found_neurons.json", neuron_dicts=found_neurons)

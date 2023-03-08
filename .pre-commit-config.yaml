@@ -38,7 +38,7 @@ repos:
 # - repo: https://github.com/python/mypy
  - repo: https://github.com/pre-commit/mirrors-mypy
 ### - repo: https://github.com/a-t-0/mypy
-   rev: v1.0.1
+   rev: v1.1.1
    hooks:
     - id: mypy
       args: ["--disallow-untyped-calls", "--disallow-untyped-defs"]
@@ -120,7 +120,6 @@ repos:
     - id: name-tests-test
       # Override default to check if `.py` files in `/test/` START with `test_`.
       args: ['--django']
-      exclude: "(^tests/sparse/MDSA/adaptation/helper.py)"
     # Ensures JSON files are properly formatted.
     - id: pretty-format-json
       args: ['--autofix']
@@ -170,7 +169,7 @@ repos:
 #     args: ['--never', '--application-directories', 'src']
 
  - repo: https://github.com/myint/docformatter
-   rev: v1.5.1
+   rev: v1.6.0.rc1
    hooks:
    - id: docformatter
 
