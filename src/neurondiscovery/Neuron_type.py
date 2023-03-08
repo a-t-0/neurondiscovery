@@ -38,6 +38,8 @@ class Neuron_type:
         self.max_time: int = max_time
         self.wait_after_input: int = wait_after_input
         self.grid_spec: Discovery = grid_spec
+        self.spike_input_type: str = spike_input_type
+        self.output_dir: str = output_dir
 
         # Get spike patterns.
         self.input_spikes: List[bool]

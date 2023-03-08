@@ -56,6 +56,7 @@ def spike_one_timestep_later_per_property(
                 ):
                     found_neurons.append(neuron_dict)
                     found_neurons[-1]["property"] = the_property
+                    return found_neurons  # TODO: remove.
                 drawProgressBar(
                     percent=count
                     / (len(neuron_dicts) * len(explored_properties)),

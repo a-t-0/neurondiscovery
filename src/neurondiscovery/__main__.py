@@ -27,7 +27,6 @@ output_dir: str = "found_neurons"
 disco: Discovery = Discovery()
 disco_ranges: Discovery = DiscoveryRanges()
 specific_ranges: Discovery = Specific_range()
-neuron_dicts: List[Dict[str, Union[float, int]]] = []
 
 
 # TODO: after finding a neuron loop over it with varying a_in_times to verify
@@ -45,15 +44,19 @@ neuron_type = Neuron_type(
     output_dir=output_dir,
 )
 
-static_neurons: Dict = find_non_changing_neurons(
-    neuron_type=neuron_type, overwrite=True
+static_neurons: List[Dict[str, Union[float, int]]] = find_non_changing_neurons(
+    neuron_type=neuron_type, overwrite=False
 )
 
-print("Neuron_dicts that are scanned for changing over time:")
-for neuron_dict in neuron_dicts:
-    print(neuron_dict)
+# print("Neuron_dicts that are scanned for changing over time:")
+# for neuron_dict in static_neurons:
+# print(static_neurons)
 
 
 found_neurons: List[Dict[str, Union[int, float, str]]] = find_changing_neurons(
-    max_redundancy=4, neuron_type=neuron_type, static_neurons=static_neurons
+    max_redundancy=4,
+    neuron_type=neuron_type,
+    print_verified_neurons=True,
+    static_neurons=static_neurons,
+    verify_shift=True,
 )
