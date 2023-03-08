@@ -11,13 +11,21 @@ that invokes this script."""
 import os
 from typing import Dict, List, Union
 
-from src.neurondiscovery.discover import get_satisfactory_neurons
-
 # Parse command line interface arguments to determine what this script does.
 # args = parse_cli_args()
-from src.neurondiscovery.Discovery import Discovery
-from src.neurondiscovery.Explicit_ranges import DiscoveryRanges
-from src.neurondiscovery.find_changing_neurons import (
+from neurondiscovery.src.neurondiscovery.grid_settings.Discovery import (
+    Discovery,
+)
+from neurondiscovery.src.neurondiscovery.grid_settings.Explicit_ranges import (
+    DiscoveryRanges,
+)
+from neurondiscovery.src.neurondiscovery.grid_settings.Specific_range import (
+    Specific_range,
+)
+from neurondiscovery.src.neurondiscovery.search.discover import (
+    get_satisfactory_neurons,
+)
+from neurondiscovery.src.neurondiscovery.search.find_changing_neurons import (
     print_changing_neuron,
     spike_one_timestep_later_per_property,
 )
@@ -25,10 +33,9 @@ from src.neurondiscovery.import_export import (
     load_dict_from_file,
     write_dict_to_file,
 )
-from src.neurondiscovery.neuron_types.after_input.n_after_input_at_m import (
+from src.neurondiscovery.spike_patterns.after_input.n_after_input_at_m import (
     n_after_input_at_m,
 )
-from src.neurondiscovery.Specific_range import Specific_range
 
 # Initialise neuron parameter ranges
 disco: Discovery = Discovery()

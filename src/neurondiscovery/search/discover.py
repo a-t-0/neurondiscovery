@@ -17,9 +17,14 @@ from snnbackends.networkx.run_on_networkx import (
 from snnbackends.verify_graph_is_snn import verify_networkx_snn_spec
 from typeguard import typechecked
 
-from src.neurondiscovery.create_snns import create_neurons, create_snns
-from src.neurondiscovery.Discovery import Discovery
-from src.neurondiscovery.print_behaviour import (
+from neurondiscovery.src.neurondiscovery.grid_settings.Discovery import (
+    Discovery,
+)
+from neurondiscovery.src.neurondiscovery.search.create_snns import (
+    create_neurons,
+    create_snns,
+)
+from neurondiscovery.src.neurondiscovery.search.print_behaviour import (
     drawProgressBar,
     get_node_name_neuron_dicts,
     manage_printing,
