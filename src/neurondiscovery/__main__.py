@@ -29,11 +29,6 @@ disco_ranges: Discovery = DiscoveryRanges()
 specific_ranges: Discovery = Specific_range()
 
 
-# TODO: after finding a neuron loop over it with varying a_in_times to verify
-# the properties still hold (and are not a lucky coincidence for a neuron that
-# starts spiking around a_in_time=10 anyways.)
-
-
 neuron_type = Neuron_type(
     a_in_time=10,
     grid_spec=disco_ranges,
@@ -47,12 +42,6 @@ neuron_type = Neuron_type(
 static_neurons: List[Dict[str, Union[float, int]]] = find_non_changing_neurons(
     neuron_type=neuron_type, overwrite=False
 )
-
-# print("Neuron_dicts that are scanned for changing over time:")
-# for neuron_dict in static_neurons:
-# print(static_neurons)
-
-
 found_neurons: List[Dict[str, Union[int, float, str]]] = find_changing_neurons(
     max_redundancy=4,
     neuron_type=neuron_type,

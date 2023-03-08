@@ -118,7 +118,12 @@ def verify_changing_neuron(
     shift: int,
 ) -> None:
     """Verifies that the expected spike pattern shifts in time along with
-    a_in_time (increases)."""
+    a_in_time (increases).
+
+    After finding a neuron loop over it with varying a_in_times to
+    verify the properties still hold (and are not a lucky coincidence
+    for a neuron that starts spiking around a_in_time=10 anyways.)
+    """
     # Copy neuron parameters into specific search range.
     print(f"found_neuron={found_neuron}")
     custom_range: Discovery = Custom_range(
