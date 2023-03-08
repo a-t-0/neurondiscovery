@@ -17,7 +17,9 @@ from neurondiscovery.search.find_changing_neurons import (
 )
 
 
-def find_non_changing_neurons(neuron_type: Neuron_type) -> Dict:
+def find_non_changing_neurons(
+    neuron_type: Neuron_type, overwrite: bool
+) -> Dict:
     """Finds neurons with static properties that show some spike pattern with
     and/or without input spikes.
 
@@ -25,7 +27,7 @@ def find_non_changing_neurons(neuron_type: Neuron_type) -> Dict:
     """
     non_changing_filename: str = "static.json"
     output_filename: str = f"{neuron_type.type_dir}/{non_changing_filename}"
-    if os.path.isfile(output_filename):
+    if os.path.isfile(output_filename) and not overwrite:
         neuron_dicts = load_dict_from_file(output_filename)
     else:
         # if True:

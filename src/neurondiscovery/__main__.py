@@ -37,15 +37,17 @@ neuron_dicts: List[Dict[str, Union[float, int]]] = []
 
 neuron_type = Neuron_type(
     a_in_time=10,
-    grid_spec=specific_ranges,
+    grid_spec=disco_ranges,
     max_time=50,
     wait_after_input=1,
     name="selector",
-    input_spikes="one_spike",
+    spike_input_type="one_spike",
     output_dir=output_dir,
 )
 
-static_neurons: Dict = find_non_changing_neurons(neuron_type=neuron_type)
+static_neurons: Dict = find_non_changing_neurons(
+    neuron_type=neuron_type, overwrite=True
+)
 
 print("Neuron_dicts that are scanned for changing over time:")
 for neuron_dict in neuron_dicts:

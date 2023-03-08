@@ -13,3 +13,30 @@ behaviour you want.
 ```bash
 python -m src.neurondiscovery
 ```
+
+### Updating
+
+Build the pip package with:
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip install twine
+```
+
+Install the pip package locally with:
+
+```bash
+rm -r dist
+rm -r build
+python3 setup.py sdist bdist_wheel
+pip install -e .
+```
+
+Upload the pip package to the world with:
+
+```bash
+rm -r dist
+rm -r build
+python3 setup.py sdist bdist_wheel
+python3 -m twine upload dist/\*
+```
