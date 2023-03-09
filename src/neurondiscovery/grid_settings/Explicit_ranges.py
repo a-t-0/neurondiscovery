@@ -31,13 +31,13 @@ class DiscoveryRanges(Discovery):
         self.dv_range = [-1, -0.1, 0, 0.1, 1]
 
         # Specify supported values for u
-        self.bias_range = list(range(0, 10))
+        self.bias_range = list(range(-10, 10))
 
         # Specify supported values for u
         self.vth_range = list(range(0, 10))
 
         # Specify supported values for weight
-        self.weight_range = list(range(-5, 5))
+        self.weight_range = list(range(-5000000, -4999996))
 
         # Specify supported values for weight
-        self.a_in_range = list(range(0, 5))
+        self.a_in_range = list(range(-1, 5))

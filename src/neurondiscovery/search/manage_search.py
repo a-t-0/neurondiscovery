@@ -3,6 +3,7 @@ properties, and one for changing neuron properties."""
 # If neuron properties already exist, load from file.
 # TODO: support storing different neuron types under different names.
 import os
+import sys
 from pprint import pprint
 from typing import Dict, List, Union
 
@@ -24,7 +25,7 @@ from neurondiscovery.search.find_changing_neurons import (
 
 @typechecked
 def find_non_changing_neurons(
-    neuron_type: Neuron_type, overwrite: bool
+    neuron_type: Neuron_type, overwrite: bool, verbose: bool
 ) -> List[Dict[str, Union[float, int]]]:
     """Finds neurons with static properties that show some spike pattern with
     and/or without input spikes.
@@ -33,6 +34,7 @@ def find_non_changing_neurons(
     """
     non_changing_filename: str = "static.json"
     output_filename: str = f"{neuron_type.type_dir}/{non_changing_filename}"
+    print(f"output_filename={output_filename}")
     if os.path.isfile(output_filename) and not overwrite:
         neuron_dicts = load_dict_from_file(output_filename)
     else:
@@ -45,7 +47,7 @@ def find_non_changing_neurons(
             max_neuron_props={"vth": 100},
             min_neuron_props={"vth": -100},
             min_nr_of_neurons=None,
-            verbose=False,
+            verbose=verbose,
         )
 
         # Write neuron properties to file.
@@ -54,6 +56,8 @@ def find_non_changing_neurons(
     return neuron_dicts
 
 
+# pylint: disable=W0719
+# pylint: disable=R0913
 @typechecked
 def find_changing_neurons(
     max_redundancy: int,
@@ -61,6 +65,7 @@ def find_changing_neurons(
     print_verified_neurons: bool,
     static_neurons: List[Dict[str, Union[float, int]]],
     verify_shift: bool,
+    verbose: bool,
 ) -> List[Dict[str, Union[int, float, str]]]:
     """Finds neurons that show a spike pattern after changing 1 property with a
     delta value of 1, per timestep.
@@ -72,12 +77,14 @@ def find_changing_neurons(
     TODO: include verification on changing a_in_time to see if the spike
     pattern shifts accordingly.
     """
+    print(f"neuron_type={neuron_type}")
+    pprint(neuron_type.__dict__)
 
     found_neurons: List[
         Dict[str, Union[int, float, str]]
     ] = spike_one_timestep_later_per_property(
-        a_in_time=neuron_type.a_in_time,
         neuron_dicts=static_neurons,
+        neuron_type=neuron_type,
         max_redundancy=max_redundancy,
         wait_after_input=neuron_type.wait_after_input,
     )
@@ -85,12 +92,16 @@ def find_changing_neurons(
     if verify_shift:
         for found_neuron in found_neurons:
             verify_changing_neuron(
-                found_neuron=found_neuron, neuron_type=neuron_type, shift=10
+                found_neuron=found_neuron,
+                neuron_type=neuron_type,
+                shift=10,
+                verbose=verbose,
             )
 
     if print_verified_neurons:
         if len(found_neurons) == 0:
             print("Did not find suitable neuron.")
+            sys.exit()
         else:
             for found_neuron in found_neurons:
                 print("")
@@ -99,6 +110,7 @@ def find_changing_neurons(
                 print_changing_neuron(
                     a_in_time=neuron_type.a_in_time,
                     neuron_dict=found_neuron,
+                    neuron_type=neuron_type,
                     the_property=found_neuron["property"],
                     max_redundancy=max_redundancy,
                     wait_after_input=neuron_type.wait_after_input,
@@ -116,13 +128,14 @@ def verify_changing_neuron(
     found_neuron: Dict[str, Union[int, float, str]],
     neuron_type: Neuron_type,
     shift: int,
+    verbose: bool,
 ) -> None:
     """Verifies that the expected spike pattern shifts in time along with
     a_in_time (increases).
 
     After finding a neuron loop over it with varying a_in_times to
     verify the properties still hold (and are not a lucky coincidence
-    for a neuron that starts spiking around a_in_time=10 anyways.)
+    for a neuron that starts spiking around a_in_time=x anyways.)
     """
     # Copy neuron parameters into specific search range.
     print(f"found_neuron={found_neuron}")
@@ -145,12 +158,16 @@ def verify_changing_neuron(
             wait_after_input=neuron_type.wait_after_input,
             name="custom",
             spike_input_type=neuron_type.spike_input_type,
+            spike_output_type=neuron_type.spike_output_type,
             output_dir=neuron_type.output_dir,
         )
+        if verbose:
+            pprint(local_neuron_type.__dict__)
 
         local_static_neurons = find_non_changing_neurons(
-            neuron_type=local_neuron_type, overwrite=True
+            neuron_type=local_neuron_type, overwrite=True, verbose=verbose
         )
+        print(f"local_static_neurons={local_static_neurons}")
 
         # TODO: Assert the neuron is still behaving as expected.
 
@@ -160,9 +177,10 @@ def verify_changing_neuron(
         ] = find_changing_neurons(
             max_redundancy=4,
             neuron_type=local_neuron_type,
-            print_verified_neurons=False,
+            print_verified_neurons=True,
             static_neurons=local_static_neurons,
             verify_shift=False,
+            verbose=verbose,
         )
 
         # Update the a_in_time:

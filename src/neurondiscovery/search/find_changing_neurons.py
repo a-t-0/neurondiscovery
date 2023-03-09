@@ -7,16 +7,17 @@ from typeguard import typechecked
 
 from neurondiscovery.grid_settings.Discovery import Discovery
 from neurondiscovery.grid_settings.Specific_range import Specific_range
+from neurondiscovery.neuron_types import Neuron_type
+from neurondiscovery.neuron_types.Neuron_type import get_output_spike_pattern
 from neurondiscovery.search.discover import get_satisfactory_neurons
 from neurondiscovery.search.print_behaviour import drawProgressBar
-from neurondiscovery.spike_patterns.expected_patterns import n_after_input_at_m
 
 
 @typechecked
 def spike_one_timestep_later_per_property(
-    a_in_time: int,
     neuron_dicts: List[Dict[str, Union[float, int, str]]],
     max_redundancy: int,
+    neuron_type: Neuron_type,
     wait_after_input: int,
 ) -> List[Dict[str, Union[int, float, str]]]:
     """Perform secondary loop on property increase/decreases per satisfactory.
@@ -37,6 +38,8 @@ def spike_one_timestep_later_per_property(
     found_neurons: List[Dict[str, Union[int, float, str]]] = []
     for neuron_dict in neuron_dicts:
         for the_property in explored_properties:
+            # print("neuron_dict")
+            # pprint(neuron_dict)
             count += 1
             # specify disco.
             original_disco: Discovery = Specific_range()
@@ -46,11 +49,26 @@ def spike_one_timestep_later_per_property(
             original_disco.vth_range = [neuron_dict["vth"]]
             original_disco.weight_range = [neuron_dict["weight"]]
             original_disco.a_in_range = [int(neuron_dict["a_in"])]
+            # print("original_disco")
+            # pprint(original_disco.__dict__)
+            if original_disco.bias_range[0] != neuron_dict["bias"]:
+                raise ValueError("du not equal")
+            if original_disco.du_range[0] != neuron_dict["du"]:
+                raise ValueError("du not equal")
+            if original_disco.dv_range[0] != neuron_dict["dv"]:
+                raise ValueError("du not equal")
+            if original_disco.vth_range[0] != neuron_dict["vth"]:
+                raise ValueError("du not equal")
+            if original_disco.weight_range[0] != neuron_dict["weight"]:
+                raise ValueError("du not equal")
+            if original_disco.a_in_range[0] != neuron_dict["a_in"]:
+                raise ValueError("du not equal")
+
             if count / (len(neuron_dicts) * len(explored_properties)) > 0.5470:
                 if changes_over_time_correctly(
-                    a_in_time=a_in_time,
                     disco=copy.deepcopy(original_disco),
                     max_redundancy=max_redundancy,
+                    neuron_type=neuron_type,
                     the_property=the_property,
                     wait_after_input=copy.deepcopy(wait_after_input),
                 ):
@@ -66,11 +84,12 @@ def spike_one_timestep_later_per_property(
     return found_neurons
 
 
+# pylint: disable=R0913
 @typechecked
 def changes_over_time_correctly(
-    a_in_time: int,
     disco: Discovery,
     max_redundancy: int,
+    neuron_type: Neuron_type,
     the_property: str,
     wait_after_input: int,
 ) -> bool:
@@ -82,19 +101,21 @@ def changes_over_time_correctly(
         # Update discovery object.
         update_neuron_property(disco=disco, the_property=the_property)
 
-        # Update wait_after_input.
+        # Update wait_after_input (because redundant neurons should spike
+        # one timestep later.).
         wait_after_input = wait_after_input + 1
 
         # specify spike pattern.
-        expected_spikes: List[bool] = n_after_input_at_m(
-            a_in_time=a_in_time,
-            max_time=50,
+        expected_spikes: List[bool] = get_output_spike_pattern(
+            a_in_time=neuron_type.a_in_time,
+            max_time=neuron_type.max_time,
             wait_after_input=wait_after_input,
+            spike_output_type=neuron_type.spike_output_type,
         )
 
         # simulate snn.
         neuron_dicts = get_satisfactory_neurons(
-            a_in_time=a_in_time,
+            a_in_time=neuron_type.a_in_time,
             disco=disco,
             expected_spikes=expected_spikes,
             max_neuron_props={"vth": 100},
@@ -133,6 +154,7 @@ def update_neuron_property(disco: Discovery, the_property: str) -> None:
 def print_changing_neuron(
     a_in_time: int,
     neuron_dict: Dict[str, Union[float, int, str]],
+    neuron_type: Neuron_type,
     the_property: str,
     max_redundancy: int,
     wait_after_input: int,
@@ -163,10 +185,11 @@ def print_changing_neuron(
         wait_after_input = wait_after_input + 1
 
         # specify spike pattern.
-        expected_spikes: List[bool] = n_after_input_at_m(
+        expected_spikes: List[bool] = get_output_spike_pattern(
             a_in_time=a_in_time,
             max_time=50,
             wait_after_input=wait_after_input,
+            spike_output_type=neuron_type.spike_output_type,
         )
 
         if len(lines) != len(expected_spikes):

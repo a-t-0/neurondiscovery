@@ -127,7 +127,6 @@ def manage_simulation(
             verbose=verbose,
         ):
             working_snns.append(snn)
-            print("Checking primary neuron:")
             print(
                 get_node_name_neuron_dicts(
                     a_in_time=a_in_time,
