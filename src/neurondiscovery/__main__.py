@@ -15,7 +15,7 @@ from typing import Dict, List, Union
 from neurondiscovery.grid_settings.Discovery import Discovery
 from neurondiscovery.grid_settings.Explicit_ranges import DiscoveryRanges
 from neurondiscovery.grid_settings.Specific_range import Specific_range
-from neurondiscovery.Neuron_type import Neuron_type
+from neurondiscovery.neuron_types.Neuron_type import Neuron_type
 from neurondiscovery.search.manage_search import (
     find_changing_neurons,
     find_non_changing_neurons,

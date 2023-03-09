@@ -14,7 +14,7 @@ from neurondiscovery.import_export import (
     load_dict_from_file,
     write_dict_to_file,
 )
-from neurondiscovery.Neuron_type import Neuron_type
+from neurondiscovery.neuron_types.Neuron_type import Neuron_type
 from neurondiscovery.search.discover import get_satisfactory_neurons
 from neurondiscovery.search.find_changing_neurons import (
     print_changing_neuron,
@@ -136,7 +136,7 @@ def verify_changing_neuron(
         name="custom",
     )
 
-    for i in range(0, shift):
+    for i in range(1, shift):
         # Do a new static neuron search.
         local_neuron_type: Neuron_type = Neuron_type(
             a_in_time=neuron_type.a_in_time + i,
@@ -167,7 +167,7 @@ def verify_changing_neuron(
 
         # Update the a_in_time:
         if isinstance(local_found_neurons[0]["a_in_time"], int):
-            local_found_neurons[0]["a_in_time"] += 1
+            local_found_neurons[0]["a_in_time"] -= i
 
         # Assert the neuron is still behaving as expected.
         if local_found_neurons[0] != found_neuron:
